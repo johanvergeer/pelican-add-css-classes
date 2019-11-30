@@ -1,6 +1,10 @@
 from typing import Iterable, NamedTuple
 
 from bs4 import BeautifulSoup
+from pelican import contents, signals
+from pelican.contents import Content
+
+ADD_CSS_CLASSES_KEY = "ADD_CSS_CLASSES"
 
 
 class ClassAttributeReplacement(NamedTuple):
@@ -45,3 +49,17 @@ def add_css_classes(
         add_css_classes_for_selector(soup, selector, classes)
 
     return soup.decode()
+
+
+def pelican_add_css_classes(content: Content):
+    if isinstance(content, contents.Static):
+        return
+
+    replacements = content.settings.get(ADD_CSS_CLASSES_KEY)
+
+    if replacements:
+        content._content = add_css_classes(content._content, replacements)
+
+
+def register():
+    signals.content_object_init.connect(pelican_add_css_classes)
