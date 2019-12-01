@@ -48,7 +48,6 @@ def merge_replacements(
     page_replacements: Optional[ClassAttributeReplacements],
     article_replacements: Optional[ClassAttributeReplacements],
     content_type: str,
-    slug: Optional[str] = None,
 ):
     if content_type not in ("pelican_page", "pelican_article"):
         raise ValueError(
@@ -70,9 +69,14 @@ def pelican_add_css_classes(content: Content):
     if isinstance(content, contents.Static):
         return
 
-    replacements: ClassAttributeReplacements = content.settings.get(ADD_CSS_CLASSES_KEY)
+    replacements: ClassAttributeReplacements = merge_replacements(
+        content.settings.get(ADD_CSS_CLASSES_KEY),
+        content.settings.get(ADD_CSS_CLASSES_TO_PAGE_KEY),
+        content.settings.get(ADD_CSS_CLASSES_TO_ARTICLE_KEY),
+        PELICAN_PAGE if isinstance(content, contents.Page) else PELICAN_ARTICLE,
+    )
 
-    if replacements:
+    if replacements and len(replacements):
         content._content = add_css_classes(content._content, replacements)
 
 
