@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pelican-add-css-classes"
-version = "1.0.2"
+version = "1.0.4"
 description = "Adds CSS classes to html tags in Pelican documents"
 authors = ["Johan Vergeer <johanvergeer@gmail.com>"]
 license = "MIT"
