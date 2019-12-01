@@ -3,6 +3,7 @@ from plugins.add_css_classes import (
     ClassAttributeReplacements,
     add_css_classes,
     add_css_classes_for_selector,
+    merge_replacements,
 )
 import pytest
 
@@ -42,7 +43,7 @@ def soup(content: str) -> BeautifulSoup:
 
 @pytest.fixture
 def replacements() -> ClassAttributeReplacements:
-    return [{"element_name": "table", "classes": ["table", "table-fluid"]}]
+    return {"table": ["table", "table-fluid"]}
 
 
 def test_add_css_classes_for_selector(soup):
@@ -57,3 +58,51 @@ def test_add_css_classes(content, replacements):
         "table",
         "table-fluid",
     ]
+
+
+def test_merge_replacements__invalid_content_type__raises(replacements):
+    with pytest.raises(ValueError) as ex:
+        merge_replacements(replacements, None, None, "foo")
+
+    assert str(ex.value) == 'content_type must be "pelican_page" or "pelican_article".'
+
+
+def test_merge_replacements_flat():
+    replacements = {"table": ["table", "table-fluid"]}
+    expected = {"table": ["table", "table-fluid"]}
+
+    result = merge_replacements(replacements, None, None, "pelican_page")
+
+    assert result == expected
+
+
+def test_merge_replacements__page_with_extra_element_name():
+    replacements = {
+        "table": ["table", "table-fluid"],
+    }
+    page_replacements = {"div": ["page_div_class"]}
+    article_replacements = {"p": ["article_p_class"]}
+
+    expected = {"table": ["table", "table-fluid"], "div": ["page_div_class"]}
+
+    result = merge_replacements(
+        replacements, page_replacements, article_replacements, "pelican_page"
+    )
+
+    assert result == expected
+
+
+def test_merge_replacements__article_with_extra_element_name():
+    replacements = {
+        "table": ["table", "table-fluid"],
+    }
+    page_replacements = {"div": ["page_div_class"]}
+    article_replacements = {"p": ["article_p_class"]}
+
+    expected = {"table": ["table", "table-fluid"], "p": ["article_p_class"]}
+
+    result = merge_replacements(
+        replacements, page_replacements, article_replacements, "pelican_article"
+    )
+
+    assert result == expected

@@ -1,18 +1,16 @@
-from typing import Dict, Iterable, Union
+from typing import Dict, Iterable, Optional
 
 from bs4 import BeautifulSoup
 from pelican import contents, signals
 from pelican.contents import Content
 
 ADD_CSS_CLASSES_KEY = "ADD_CSS_CLASSES"
+ADD_CSS_CLASSES_TO_PAGE_KEY = "ADD_CSS_CLASSES_TO_PAGE"
+ADD_CSS_CLASSES_TO_ARTICLE_KEY = "ADD_CSS_CLASSES_TO_ARTICLE"
+PELICAN_PAGE = "pelican_page"
+PELICAN_ARTICLE = "pelican_article"
 
-
-ClassAttributeReplacements = Iterable[
-    Dict[
-        str,
-        Union[Iterable[str], Dict[str, Union[Iterable[str], Dict[str, Iterable[str]]]]],
-    ]
-]
+ClassAttributeReplacements = Dict[str, Iterable[str]]
 
 
 def add_css_classes_for_selector(
@@ -34,17 +32,38 @@ def add_css_classes(content: str, replacements: ClassAttributeReplacements) -> s
 
     Returns: content with the added class attributes
     """
-    if not isinstance(replacements, list):
-        raise ValueError(f"{ADD_CSS_CLASSES_KEY} must be a list")
+    if not isinstance(replacements, dict):
+        raise ValueError(f"{ADD_CSS_CLASSES_KEY} must be a dict")
 
     soup: BeautifulSoup = BeautifulSoup(content, "html.parser")
 
-    for replacement in replacements:
-        add_css_classes_for_selector(
-            soup, replacement["element_name"], replacement["classes"]
-        )
+    for element, classes in replacements.items():
+        add_css_classes_for_selector(soup, element, classes)
 
     return soup.decode()
+
+
+def merge_replacements(
+    replacements: ClassAttributeReplacements,
+    page_replacements: Optional[ClassAttributeReplacements],
+    article_replacements: Optional[ClassAttributeReplacements],
+    content_type: str,
+    slug: Optional[str] = None,
+):
+    if content_type not in ("pelican_page", "pelican_article"):
+        raise ValueError(
+            f'content_type must be "{PELICAN_PAGE}" or "{PELICAN_ARTICLE}".'
+        )
+
+    result = replacements.copy()
+
+    if page_replacements and content_type == PELICAN_PAGE:
+        result.update(page_replacements)
+
+    if article_replacements and content_type == PELICAN_ARTICLE:
+        result.update(article_replacements)
+
+    return result
 
 
 def pelican_add_css_classes(content: Content):
