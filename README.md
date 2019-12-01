@@ -12,6 +12,9 @@ inside `pelicanconf.py`.
 
 ## Usage
 
+__Be aware that this plugin only changes the html that is generated from Markdown!__.
+HTML from templates is not changed.
+
 ### Both pages and articles
 
 To set css classes that should be added to elements in both
