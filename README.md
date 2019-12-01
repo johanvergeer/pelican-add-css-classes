@@ -51,6 +51,16 @@ This plugin can be installed via:
 
     pip install pelican-add-css-classes
 
+Next add it to the `PLUGINS` section of `pelicanconf.py`.
+
+```python
+PLUGINS = [
+    '...',
+    'pelican.plugins.add_css_classes'
+    '...',
+]
+```
+
 Contributing
 ------------
 
