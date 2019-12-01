@@ -1,8 +1,6 @@
-from typing import Iterable
-
 from bs4 import BeautifulSoup
 from plugins.add_css_classes import (
-    ClassAttributeReplacement,
+    ClassAttributeReplacements,
     add_css_classes,
     add_css_classes_for_selector,
 )
@@ -43,8 +41,8 @@ def soup(content: str) -> BeautifulSoup:
 
 
 @pytest.fixture
-def replacements() -> Iterable[ClassAttributeReplacement]:
-    return (("table", ("table", "table-fluid")),)
+def replacements() -> ClassAttributeReplacements:
+    return [{"element_name": "table", "classes": ["table", "table-fluid"]}]
 
 
 def test_add_css_classes_for_selector(soup):

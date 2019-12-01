@@ -1,4 +1,4 @@
-from typing import Iterable, NamedTuple
+from typing import Dict, Iterable, Union
 
 from bs4 import BeautifulSoup
 from pelican import contents, signals
@@ -7,19 +7,12 @@ from pelican.contents import Content
 ADD_CSS_CLASSES_KEY = "ADD_CSS_CLASSES"
 
 
-class ClassAttributeReplacement(NamedTuple):
-    """Contains a selector to find an element
-    and classes that should be added to the `class`
-    attribute of the element
-
-    Attributes:
-        selector: The selector for the html element the css classes should be added to.
-        classes: A list of css class names to add to the `class` attribute
-            of the html element found by the selector
-    """
-
-    selector: str
-    classes: Iterable[str]
+ClassAttributeReplacements = Iterable[
+    Dict[
+        str,
+        Union[Iterable[str], Dict[str, Union[Iterable[str], Dict[str, Iterable[str]]]]],
+    ]
+]
 
 
 def add_css_classes_for_selector(
@@ -30,9 +23,7 @@ def add_css_classes_for_selector(
         item.attrs["class"] = list(attribute_set)
 
 
-def add_css_classes(
-    content: str, replacements: Iterable[ClassAttributeReplacement]
-) -> str:
+def add_css_classes(content: str, replacements: ClassAttributeReplacements) -> str:
     """Adds css classes to elements found in the content for the
     given selectors in the replacements
 
@@ -43,10 +34,15 @@ def add_css_classes(
 
     Returns: content with the added class attributes
     """
+    if not isinstance(replacements, list):
+        raise ValueError(f"{ADD_CSS_CLASSES_KEY} must be a list")
+
     soup: BeautifulSoup = BeautifulSoup(content, "html.parser")
 
-    for selector, classes in replacements:
-        add_css_classes_for_selector(soup, selector, classes)
+    for replacement in replacements:
+        add_css_classes_for_selector(
+            soup, replacement["element_name"], replacement["classes"]
+        )
 
     return soup.decode()
 
@@ -55,7 +51,7 @@ def pelican_add_css_classes(content: Content):
     if isinstance(content, contents.Static):
         return
 
-    replacements = content.settings.get(ADD_CSS_CLASSES_KEY)
+    replacements: ClassAttributeReplacements = content.settings.get(ADD_CSS_CLASSES_KEY)
 
     if replacements:
         content._content = add_css_classes(content._content, replacements)
